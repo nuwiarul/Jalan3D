@@ -6,53 +6,72 @@ Android app for reporting road damage with 3D visualization.
 - **Filament** (Google) for 3D model rendering (glTF)
 - **Jetpack Compose** for UI
 - **Kotlin** for main code
-- Kotlin coroutines + MVVM architecture
+- **Rust + Axum 0.8 + SQLx** for backend API
 
 ## Tech Stack
+
+### Android
 - **JDK:** 17 (Temurin)
 - **Gradle:** via wrapper (AGP 8.7.3)
 - **Android SDK:** Windows SDK mounted at `/mnt/c/Users/Vinrul/AppData/Local/Android/Sdk/`
-- **MapLibre Native:** Android SDK (maplibre-gl-android)
-- **Filament:** Google Filament for Android
-- **Build:** `./gradlew assembleDebug`
+- **MapLibre Native:** `org.maplibre.gl:android-sdk:11.x`
+- **Filament:** `com.google.android.filament:filament-android`
+- **Build:** `cd android && ./gradlew assembleDebug`
+
+### Backend (Rust)
+- **Framework:** Axum 0.8
+- **Database:** SQLx with multi-db support (SQLite / PostgreSQL / MariaDB)
+- **Other deps:** tokio, serde, tower-http, uuid, chrono, reqwest, dotenvy
+- **Build:** `cd backend && cargo build`
+- **Test:** `cd backend && cargo test && cargo clippy`
 
 ## Environment (WSL)
 - ANDROID_HOME: `/mnt/c/Users/Vinrul/AppData/Local/Android/Sdk`
 - SDK platform: API 24+ (target 36)
 - Build tools: 36.0.0
 - NDK: available via Windows SDK (symlinked for WSL compat)
+- Rust: stable (via rustup)
 
 ## Project Structure
 ```
 Jalan3D/
-├── AGENTS.md          ← this file
-├── app/
-│   ├── src/main/java/com/jalan3d/
+├── AGENTS.md                ← this file
+├── android/                 ← Android app
+│   ├── app/src/main/java/com/jalan3d/
 │   │   ├── MainActivity.kt
-│   │   ├── ui/           ← Compose screens
-│   │   ├── map/          ← MapLibre + CustomLayer setup
-│   │   ├── model/        ← 3D models (Filament)
-│   │   ├── data/         ← Repository, API, local DB
-│   │   └── camera/       ← CameraX for photo capture
-│   ├── src/main/assets/  ← glTF models, map style
-│   └── build.gradle.kts
+│   │   ├── ui/              ← Compose screens
+│   │   ├── map/             ← MapLibre + CustomLayer
+│   │   ├── model/           ← 3D models (Filament)
+│   │   ├── data/            ← API client, repository
+│   │   └── camera/          ← CameraX
+│   └── app/build.gradle.kts
+├── backend/                 ← Rust backend
+│   ├── src/
+│   │   ├── main.rs
+│   │   ├── routes/          ← API endpoints
+│   │   ├── models/          ← Data structures
+│   │   ├── db/              ← Database queries
+│   │   ├── geocode.rs
+│   │   └── config.rs
+│   ├── Cargo.toml
+│   └── migrations/          ← SQLx migrations
 ├── docs/
-│   ├── prd.md            ← Product Requirements Document
-│   └── plan.md           ← Implementation plan per PR
-├── build.gradle.kts      ← root
-└── settings.gradle.kts
+│   ├── prd.md               ← Product Requirements Document
+│   └── plan.md              ← Implementation plan per PR
+└── .github/workflows/
+    ├── build-android.yml    ← CI for APK
+    └── build-backend.yml    ← CI for Rust
 ```
 
 ## Workflow
-1. Agent writes code → builds locally (`./gradlew assembleDebug`)
+1. Agent writes code (Android or Backend) → builds locally
 2. Commits → creates PR
 3. User reviews → approves → merges
-4. GitHub Actions builds APK (artifact)
+4. GitHub Actions builds APK + runs Rust tests
 5. User tests on device → reports bugs via PR comment
 6. Agent iterates
 
 ## MapLibre SDK
-- Dependency: `org.maplibre.gl:android-sdk:11.x`
 - FillExtrusionLayer for 3D road damage extrusion
 - Style: protomaps or demotiles.maplibre.org
 - CustomLayer interface for Filament integration
@@ -62,4 +81,15 @@ Jalan3D/
 - CustomLayer → access OpenGL projection matrix
 - Filament renderer renders glTF model overlay
 - Camera sync: MapLibre camera → Filament camera
-- No native glTF loader in MapLibre; use Filament's gltfio
+- Use Filament's gltfio for model loading
+
+## Backend (Rust + Axum + SQLx)
+- Axum 0.8: latest stable, async-first
+- SQLx: compile-time checked queries, multi-database
+  - `sqlx::SqlitePool` for SQLite (dev)
+  - `sqlx::PgPool` for PostgreSQL (prod)
+  - `sqlx::MySqlPool` for MariaDB (prod)
+- Runtime database switching via `DATABASE_URL` env
+- Image upload via `axum::extract::Multipart`
+- Reverse geocoding via Nominatim (OpenStreetMap)
+- API returns JSON, Android uses Retrofit/OkHttp

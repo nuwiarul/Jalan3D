@@ -45,10 +45,16 @@ Aplikasi Android untuk melaporkan dan memvisualisasikan **kerusakan jalan** dala
 - Orbit camera di model 3D
 - Overlay info: alamat, tanggal, status
 
-### 3.5 Data Layer
-- Data disimpan di **Firebase Firestore** atau **Supabase**
-- Setiap laporan: {id, lat, lng, severity, foto_url, timestamp, status, alamat}
-- List view: daftar laporan terbaru
+### 3.5 Backend API (Rust)
+- REST API built with **Axum 0.8** (latest)
+- Database: **SQLx** dengan multi-database support
+  - Dev: **SQLite** (local, no setup)
+  - Prod: **PostgreSQL** atau **MariaDB**
+- Image upload via multipart, disimpan di filesystem/S3
+- Setiap laporan: `{id, lat, lng, severity, photo_url, timestamp, status, address}`
+- Endpoint: CRUD reports + list + nearby query
+- Reverse geocoding (Nominatim integration)
+- Migration with SQLx migrate
 
 ## 4. Future Features (Post-MVP)
 
@@ -75,13 +81,21 @@ Aplikasi Android untuk melaporkan dan memvisualisasikan **kerusakan jalan** dala
 ## 6. Architecture
 
 ```
-User → Compose UI → ViewModel → Repository → 
-  ├── MapLibre (map rendering)
-  ├── Filament (3D model overlay)
-  ├── CameraX (photo capture)
-  └── Backend (Firebase/Supabase)
-
-MapLibre ← CustomLayer → OpenGL ES → Filament Renderer
+┌───────────────────── Android ─────────────────────┐
+│  User → Compose UI → ViewModel → Retrofit/OkHttp   │
+│    ├── MapLibre (map rendering)                     │
+│    ├── Filament (3D model overlay)                  │
+│    └── CameraX (photo capture)                     │
+└─────────────────────┬──────────────────────────────┘
+                      │ HTTP (JSON) + Multipart
+                      ▼
+┌────────────────────── Backend ─────────────────────┐
+│  Rust + Axum 0.8                                   │
+│  ├── Routes: /api/reports, /api/upload              │
+│  ├── SQLx: SQLite | PostgreSQL | MariaDB            │
+│  ├── Image storage (disk / S3)                      │
+│  └── Reverse geocode (Nominatim)                    │
+└────────────────────────────────────────────────────┘
 ```
 
 ## 7. Milestones
@@ -89,9 +103,8 @@ MapLibre ← CustomLayer → OpenGL ES → Filament Renderer
 | Fase | Fitur | Target PR |
 |------|-------|-----------|
 | P0 | Scaffold + MapLibre basemap | PR 1 |
-| P0 | Map markers + report form | PR 2 |
-| P0 | 3D fill-extrusion jalan rusak | PR 3 |
-| P1 | Filament 3D model close-up | PR 4 |
-| P1 | Backend integration (CRUD) | PR 5 |
-| P2 | List view + history | PR 6 |
-| P2 | Polish + testing | PR 7 |
+| P0 | Backend (Rust + Axum + SQLx) | PR 2 |
+| P0 | Map markers + report form + API binding | PR 3 |
+| P1 | 3D fill-extrusion jalan rusak | PR 4 |
+| P1 | Filament 3D model close-up | PR 5 |
+| P2 | List + history + polish | PR 6 |
