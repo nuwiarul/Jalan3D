@@ -18,7 +18,7 @@
 
 ## PR 3: Map Markers + Report Form + API Binding
 - [x] **3.1** — Retrofit API client (ReportApi, ReportDto, ApiClient, ApiConfig) ✅
-- [ ] **3.2** — Location picker (tap map → lat/lng)
+- [x] **3.2** — Location picker (tap map → lat/lng + marker + reverse geocode) ✅
 - [ ] **3.3** — Report form (bottom sheet + camera)
 - [ ] **3.4** — Map markers from API
 - [ ] **3.5** — Repository layer
