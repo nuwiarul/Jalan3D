@@ -1,13 +1,16 @@
 mod config;
 mod error;
-mod routes;
 mod models;
 mod db;
+mod routes;
+mod state;
 
 use std::net::SocketAddr;
-use axum::{Router, routing::get};
+use axum::{Router, routing::{get, post}};
 use tower_http::cors::CorsLayer;
 use tracing_subscriber::EnvFilter;
+
+use state::AppState;
 
 #[tokio::main]
 async fn main() {
@@ -39,11 +42,20 @@ async fn main() {
         .expect("Failed to run migrations");
     tracing::info!("Database migrations applied");
 
+    // App state
+    let state = AppState { pool, config: config.clone() };
+
     // Build router
     let app = Router::new()
+        // Health
         .route("/api/health", get(routes::health::health_check))
+        // Reports CRUD
+        .route("/api/reports", get(routes::reports::list_reports).post(routes::reports::create_report))
+        .route("/api/reports/{id}", get(routes::reports::get_report).put(routes::reports::update_report).delete(routes::reports::delete_report))
+        // Upload
+        .route("/api/upload", post(routes::upload::upload_photo))
         .layer(CorsLayer::permissive())
-        .with_state(pool);
+        .with_state(state);
 
     // Start server
     let addr = SocketAddr::new(
