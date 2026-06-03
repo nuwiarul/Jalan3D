@@ -120,6 +120,29 @@ class MapViewModel : ViewModel() {
         _uiState.value = _uiState.value.copy(showForm = false)
     }
 
+    /**
+     * Cancel the current report and clear the tapped location.
+     * This makes the "Laporkan Lokasi Saya" button reappear.
+     */
+    fun cancelReport() {
+        _uiState.value = _uiState.value.copy(
+            tappedLat = null,
+            tappedLng = null,
+            tappedAddress = null,
+            isLoadingAddress = false,
+            showForm = false,
+            selectedSeverity = "ringan",
+            description = "",
+            photoUri = null,
+            submitSuccess = false,
+            submitError = null
+        )
+    }
+
+    /**
+     * Clear tapped location after successful submit.
+     * Does NOT reset isGpsCentered — GPS centering only happens once.
+     */
     fun clearTappedLocation() {
         _uiState.value = _uiState.value.copy(
             tappedLat = null,
@@ -131,8 +154,7 @@ class MapViewModel : ViewModel() {
             description = "",
             photoUri = null,
             submitSuccess = false,
-            submitError = null,
-            isGpsCentered = false
+            submitError = null
         )
     }
 
