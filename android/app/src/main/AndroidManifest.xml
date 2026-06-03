@@ -13,7 +13,8 @@
         android:allowBackup="true"
         android:label="Jalan3D"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Jalan3D">
+        android:theme="@style/Theme.Jalan3D"
+        android:usesCleartextTraffic="true">
 
         <activity
             android:name=".MainActivity"

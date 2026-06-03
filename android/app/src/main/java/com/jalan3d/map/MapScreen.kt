@@ -8,15 +8,34 @@ import android.location.Location
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -43,6 +62,7 @@ import org.maplibre.android.maps.Style
 import org.maplibre.android.camera.CameraUpdateFactory
 
 private const val STYLE_URL = "https://demotiles.maplibre.org/style.json"
+private const val CONTROL_STEP = 15.0 // degrees for tilt & bearing adjustments
 
 @Composable
 fun MapScreen(
@@ -205,12 +225,13 @@ fun MapScreen(
             modifier = Modifier.fillMaxSize()
         )
 
+        // ── Snackbar ──
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
 
-        // Address overlay when location is tapped but form not yet shown
+        // ── Address overlay (when location is tapped but form not yet shown) ──
         if (uiState.tappedAddress != null && !uiState.showForm) {
             Surface(
                 modifier = Modifier
@@ -228,7 +249,7 @@ fun MapScreen(
             }
         }
 
-        // Loading indicator while geocoding
+        // ── Loading indicator while geocoding ──
         if (uiState.isLoadingAddress) {
             CircularProgressIndicator(
                 modifier = Modifier
@@ -237,7 +258,86 @@ fun MapScreen(
             )
         }
 
-        // Report form bottom sheet
+        // ── Map controls panel (right side) ──
+        Column(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .padding(end = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            // Compass — reset bearing to 0
+            MapControlButton(onClick = { resetBearing(mapLibreMap) }) {
+                Icon(
+                    Icons.Default.MyLocation,
+                    contentDescription = "Reset bearing",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            // Tilt up
+            MapControlButton(onClick = { adjustTilt(mapLibreMap, CONTROL_STEP) }) {
+                Icon(Icons.Default.ArrowUpward, "Tilt naik", modifier = Modifier.size(20.dp))
+            }
+
+            // Zoom +
+            MapControlButton(onClick = { mapLibreMap?.animateCamera(CameraUpdateFactory.zoomIn(), 300) }) {
+                Icon(Icons.Default.Add, "Zoom in", modifier = Modifier.size(20.dp))
+            }
+
+            // Zoom -
+            MapControlButton(onClick = { mapLibreMap?.animateCamera(CameraUpdateFactory.zoomOut(), 300) }) {
+                Icon(Icons.Default.Remove, "Zoom out", modifier = Modifier.size(20.dp))
+            }
+
+            // Tilt down
+            MapControlButton(onClick = { adjustTilt(mapLibreMap, -CONTROL_STEP) }) {
+                Icon(Icons.Default.ArrowDownward, "Tilt turun", modifier = Modifier.size(20.dp))
+            }
+
+            // Bearing left / right
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                MapControlButton(onClick = { adjustBearing(mapLibreMap, -CONTROL_STEP) }) {
+                    Icon(Icons.Default.ChevronLeft, "Bearing kiri", modifier = Modifier.size(20.dp))
+                }
+                MapControlButton(onClick = { adjustBearing(mapLibreMap, CONTROL_STEP) }) {
+                    Icon(Icons.Default.ChevronRight, "Bearing kanan", modifier = Modifier.size(20.dp))
+                }
+            }
+        }
+
+        // ── "Laporkan Lokasi Saya" button ──
+        // Shown only when GPS is active and no tap-dropped marker is on the map
+        if (uiState.hasGpsFix && !uiState.showForm && uiState.tappedLat == null) {
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 80.dp), // above snackbar
+                shape = RoundedCornerShape(16.dp),
+                shadowElevation = 6.dp,
+                color = MaterialTheme.colorScheme.primaryContainer
+            ) {
+                TextButton(
+                    onClick = {
+                        val lat = uiState.currentLat ?: return@TextButton
+                        val lng = uiState.currentLng ?: return@TextButton
+                        mapViewModel.onMapTapped(lat, lng)
+                    },
+                    modifier = Modifier.padding(horizontal = 20.dp)
+                ) {
+                    Icon(Icons.Default.MyLocation, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        "Laporkan Lokasi Saya",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+            }
+        }
+
+        // ── Report form bottom sheet ──
         if (uiState.showForm) {
             ReportFormSheet(
                 address = uiState.tappedAddress,
@@ -266,6 +366,77 @@ fun MapScreen(
                 onSubmit = { mapViewModel.submitReport(context) }
             )
         }
+    }
+}
+
+// ─── Small circular map control button ───
+
+@Composable
+private fun MapControlButton(
+    onClick: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    FloatingActionButton(
+        onClick = onClick,
+        modifier = Modifier.size(36.dp),
+        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+        elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 2.dp)
+    ) {
+        content()
+    }
+}
+
+// ─── Camera helpers ───
+
+private fun adjustTilt(map: MapLibreMap?, delta: Double) {
+    map?.let { m ->
+        val pos = m.cameraPosition
+        val newTilt = (pos.tilt + delta).coerceIn(0.0, 80.0)
+        m.animateCamera(
+            CameraUpdateFactory.newCameraPosition(
+                org.maplibre.android.camera.CameraPosition.Builder()
+                    .target(pos.target)
+                    .zoom(pos.zoom)
+                    .bearing(pos.bearing)
+                    .tilt(newTilt)
+                    .build()
+            ),
+            300
+        )
+    }
+}
+
+private fun adjustBearing(map: MapLibreMap?, delta: Double) {
+    map?.let { m ->
+        val pos = m.cameraPosition
+        m.animateCamera(
+            CameraUpdateFactory.newCameraPosition(
+                org.maplibre.android.camera.CameraPosition.Builder()
+                    .target(pos.target)
+                    .zoom(pos.zoom)
+                    .bearing(pos.bearing + delta)
+                    .tilt(pos.tilt)
+                    .build()
+            ),
+            300
+        )
+    }
+}
+
+private fun resetBearing(map: MapLibreMap?) {
+    map?.let { m ->
+        val pos = m.cameraPosition
+        m.animateCamera(
+            CameraUpdateFactory.newCameraPosition(
+                org.maplibre.android.camera.CameraPosition.Builder()
+                    .target(pos.target)
+                    .zoom(pos.zoom)
+                    .bearing(0.0)
+                    .tilt(pos.tilt)
+                    .build()
+            ),
+            300
+        )
     }
 }
 
