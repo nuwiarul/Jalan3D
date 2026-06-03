@@ -9,7 +9,7 @@
 ## PR 2: Backend (Rust + Axum 0.8 + SQLx)
 - [x] **2.1** — Project scaffold (Cargo.toml, rust-toolchain.toml) ✅
 - [x] **2.2** — Database layer (SQLx CRUD queries + request DTOs + offline mode) ✅
-- [ ] **2.3** — Multi-database config (SQLite / PostgreSQL / MariaDB)
+- [x] **2.3** — Multi-database config (auto-detect SQLite / PostgreSQL / MariaDB) ✅
 - [ ] **2.4** — API Routes (health, reports CRUD, upload)
 - [ ] **2.5** — Image upload (multipart, resize)
 - [ ] **2.6** — Reverse Geocoding (Nominatim)
