@@ -93,3 +93,9 @@ Jalan3D/
 - Image upload via `axum::extract::Multipart`
 - Reverse geocoding via Nominatim (OpenStreetMap)
 - API returns JSON, Android uses Retrofit/OkHttp
+
+## Deployment (Backend)
+- Build/run via **tmux** di server (WSL), bukan CI
+- Android connect ke backend via **Tailscale**
+- Backend URL: `http://100.72.147.67:<port>` (WSL Tailscale IP)
+- Di Android dev: ganti BASE_URL pake Tailscale IP
