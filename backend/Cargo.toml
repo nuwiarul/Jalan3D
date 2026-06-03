@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 # Web framework
-axum = "0.8"
+axum = { version = "0.8", features = ["multipart"] }
 
 # Database
 sqlx = { version = "0.8", features = [
