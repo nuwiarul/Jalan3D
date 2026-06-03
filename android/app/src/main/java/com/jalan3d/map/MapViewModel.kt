@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jalan3d.data.api.ApiClient
 import com.jalan3d.data.api.CreateReportRequest
+import com.jalan3d.data.api.ReportResponse
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -41,7 +42,11 @@ data class MapUiState(
     val currentLat: Double? = null,
     val currentLng: Double? = null,
     val hasGpsFix: Boolean = false,
-    val isGpsCentered: Boolean = false
+    val isGpsCentered: Boolean = false,
+    // Reports from API
+    val reports: List<ReportResponse> = emptyList(),
+    val isLoadingReports: Boolean = false,
+    val reportsError: String? = null
 )
 
 class MapViewModel : ViewModel() {
@@ -158,6 +163,40 @@ class MapViewModel : ViewModel() {
         )
     }
 
+    // ─── Load reports from backend ───
+
+    fun loadReports() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isLoadingReports = true,
+                reportsError = null
+            )
+            try {
+                val response = ApiClient.api.listReports()
+                if (response.isSuccessful) {
+                    _uiState.value = _uiState.value.copy(
+                        reports = response.body() ?: emptyList(),
+                        isLoadingReports = false,
+                        reportsError = null
+                    )
+                } else {
+                    val errorBody = response.errorBody()?.string() ?: "Unknown error"
+                    _uiState.value = _uiState.value.copy(
+                        isLoadingReports = false,
+                        reportsError = "Gagal muat laporan: $errorBody"
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoadingReports = false,
+                    reportsError = "Error: ${e.message}"
+                )
+            }
+        }
+    }
+
+    // ─── Submit report ───
+
     fun submitReport(context: Context) {
         val lat = _uiState.value.tappedLat ?: return
         val lng = _uiState.value.tappedLng ?: return
@@ -203,6 +242,8 @@ class MapViewModel : ViewModel() {
                         submitSuccess = true,
                         showForm = false
                     )
+                    // Reload reports to show the new one on map
+                    loadReports()
                 } else {
                     val errorBody = response.errorBody()?.string() ?: "Unknown error"
                     _uiState.value = _uiState.value.copy(
