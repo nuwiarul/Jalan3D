@@ -1,5 +1,6 @@
 mod config;
 mod error;
+mod geocode;
 mod models;
 mod db;
 mod routes;
@@ -43,7 +44,11 @@ async fn main() {
     tracing::info!("Database migrations applied");
 
     // App state
-    let state = AppState { pool, config: config.clone() };
+    let state = AppState {
+        pool,
+        config: config.clone(),
+        geocode_cache: geocode::GeoCache::new(),
+    };
 
     // Build router
     let app = Router::new()
@@ -54,6 +59,8 @@ async fn main() {
         .route("/api/reports/{id}", get(routes::reports::get_report).put(routes::reports::update_report).delete(routes::reports::delete_report))
         // Upload
         .route("/api/upload", post(routes::upload::upload_photo))
+        // Reverse Geocode
+        .route("/api/geocode/reverse", get(routes::geocode::reverse))
         .layer(CorsLayer::permissive())
         .with_state(state);
 
