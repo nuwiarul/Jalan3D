@@ -246,7 +246,7 @@ fun MapScreen(
                 isSubmitting = uiState.isSubmitting,
                 submitError = uiState.submitError,
                 submitSuccess = uiState.submitSuccess,
-                onDismiss = { mapViewModel.hideForm() },
+                onDismiss = { mapViewModel.cancelReport() },
                 onSeveritySelected = { mapViewModel.selectSeverity(it) },
                 onDescriptionChange = { mapViewModel.updateDescription(it) },
                 onTakePhoto = {
