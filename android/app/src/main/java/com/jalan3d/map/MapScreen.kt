@@ -1,12 +1,16 @@
 package com.jalan3d.map
 
 import android.annotation.SuppressLint
-import android.content.Context
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,6 +26,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.jalan3d.camera.PhotoCapture
+import com.jalan3d.ui.ReportFormSheet
 import org.maplibre.android.MapLibre
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.MapLibreMap
@@ -39,6 +45,17 @@ fun MapScreen(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val uiState by mapViewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Camera launcher
+    var photoUri: Uri? = null
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && photoUri != null) {
+            mapViewModel.setPhotoUri(photoUri)
+        }
+    }
 
     // Initialize MapLibre once
     val mapView = remember {
@@ -69,11 +86,9 @@ fun MapScreen(
             }
 
             map.setStyle(Style.Builder().fromUri(STYLE_URL)) { style ->
-                // Initialize marker layer
                 MapMarkers.initialize(style)
                 mapViewModel.onMapReady()
 
-                // Set default camera to Bali
                 val position = uiState.camera
                 map.animateCamera(
                     CameraUpdateFactory.newCameraPosition(
@@ -104,14 +119,27 @@ fun MapScreen(
         }
     }
 
+    // Show success snackbar
+    LaunchedEffect(uiState.submitSuccess) {
+        if (uiState.submitSuccess) {
+            snackbarHostState.showSnackbar("Laporan berhasil dikirim! ✅")
+            mapViewModel.clearTappedLocation()
+        }
+    }
+
     Box(modifier = modifier.fillMaxSize()) {
         AndroidView(
             factory = { mapView },
             modifier = Modifier.fillMaxSize()
         )
 
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
+
         // Address overlay when location is tapped
-        if (uiState.tappedAddress != null) {
+        if (uiState.tappedAddress != null && !uiState.showForm) {
             Surface(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
@@ -134,6 +162,26 @@ fun MapScreen(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .padding(16.dp)
+            )
+        }
+
+        // Report form bottom sheet
+        if (uiState.showForm) {
+            ReportFormSheet(
+                address = uiState.tappedAddress,
+                selectedSeverity = uiState.selectedSeverity,
+                photoUri = uiState.photoUri,
+                isSubmitting = uiState.isSubmitting,
+                submitError = uiState.submitError,
+                submitSuccess = uiState.submitSuccess,
+                onDismiss = { mapViewModel.hideForm() },
+                onSeveritySelected = { mapViewModel.selectSeverity(it) },
+                onDescriptionChange = { mapViewModel.updateDescription(it) },
+                onTakePhoto = {
+                    photoUri = PhotoCapture.createPhotoUri(context)
+                    photoUri?.let { cameraLauncher.launch(it) }
+                },
+                onSubmit = { mapViewModel.submitReport(context) }
             )
         }
     }
