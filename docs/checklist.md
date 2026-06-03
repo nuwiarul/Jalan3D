@@ -17,7 +17,7 @@
 **Catatan:** Build/run backend via tmux di server, bukan CI. Android connect via Tailscale.
 
 ## PR 3: Map Markers + Report Form + API Binding
-- [ ] **3.1** — Retrofit API client
+- [x] **3.1** — Retrofit API client (ReportApi, ReportDto, ApiClient, ApiConfig) ✅
 - [ ] **3.2** — Location picker (tap map → lat/lng)
 - [ ] **3.3** — Report form (bottom sheet + camera)
 - [ ] **3.4** — Map markers from API

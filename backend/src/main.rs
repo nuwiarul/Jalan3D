@@ -33,7 +33,11 @@ async fn main() {
     );
 
     // Build database pool (auto-detects SQLite / PostgreSQL / MariaDB)
-    let pool = db::pool::create_pool(&config.database_url, &config.database_kind).await;
+    let pool = {
+        // Install SQLx Any drivers (sqlite, postgres, mysql) before connecting
+        sqlx::any::install_default_drivers();
+        db::pool::create_pool(&config.database_url, &config.database_kind).await
+    };
     tracing::info!("Database pool connected");
 
     // Run migrations
