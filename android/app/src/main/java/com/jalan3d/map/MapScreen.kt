@@ -177,6 +177,9 @@ fun MapScreen(
                 locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
             }
         }
+        if (uiState.isMapReady) {
+            mapViewModel.loadReports()
+        }
     }
 
     // ─── Animate camera to GPS position once fix is obtained ───
@@ -207,6 +210,13 @@ fun MapScreen(
         val lng = uiState.tappedLng ?: return@LaunchedEffect
         mapLibreMap?.style?.let { style ->
             MapMarkers.updatePosition(style, lat, lng)
+        }
+    }
+
+    // ─── Update report markers when reports list changes ───
+    LaunchedEffect(uiState.reports) {
+        mapLibreMap?.style?.let { style ->
+            MapMarkers.updateReports(style, uiState.reports)
         }
     }
 
