@@ -3,7 +3,7 @@
 ## PR 1: Android Scaffold + MapLibre Basemap
 - [x] **1.1** — Create project skeleton ✅
 - [x] **1.2** — MapLibre Compose wrapper (MapScreen.kt, MapViewModel.kt, camera 3D view) ✅
-- [ ] **1.3** — App navigation scaffold (Bottom bar: Map, List, Profile)
+- [x] **1.3** — App navigation scaffold (Bottom bar: Map, List, Profile) ✅
 - [x] **1.4** — GitHub Actions CI (Android) ✅
 
 ## PR 2: Backend (Rust + Axum 0.8 + SQLx)
