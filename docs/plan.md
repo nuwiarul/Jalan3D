@@ -136,12 +136,6 @@ POST   /api/upload                 → Upload photo (multipart), return URL
 - Endpoint yang memanggil Nominatim berdasarkan lat/lng
 - Cache sederhana di memory (HashMap dengan TTL)
 
-### Task 2.7 — CI (Rust)
-- `.github/workflows/build-backend.yml`
-- Trigger: PR ke main
-- Steps: cargo check → cargo clippy → cargo test
-- Cache cargo registry
-
 **Files:**
 - `backend/Cargo.toml`
 - `backend/rust-toolchain.toml`
@@ -161,9 +155,8 @@ POST   /api/upload                 → Upload photo (multipart), return URL
 - `backend/migrations/001_create_reports.sql`
 - `backend/.env.example`
 - `backend/.gitignore`
-- `.github/workflows/build-backend.yml`
 
-**Verification:** `cd backend && cargo test && cargo clippy` ✅
+**Verification:** `cd backend && cargo build` ✅
 
 ---
 

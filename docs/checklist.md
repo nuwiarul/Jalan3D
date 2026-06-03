@@ -13,7 +13,8 @@
 - [ ] **2.4** — API Routes (health, reports CRUD, upload)
 - [ ] **2.5** — Image upload (multipart, resize)
 - [ ] **2.6** — Reverse Geocoding (Nominatim)
-- [ ] **2.7** — CI (Rust)
+
+**Catatan:** Build/run backend via tmux di server, bukan CI. Android connect via Tailscale.
 
 ## PR 3: Map Markers + Report Form + API Binding
 - [ ] **3.1** — Retrofit API client
