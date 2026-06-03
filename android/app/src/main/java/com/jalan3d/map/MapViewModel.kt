@@ -36,7 +36,12 @@ data class MapUiState(
     val photoUri: Uri? = null,
     val isSubmitting: Boolean = false,
     val submitSuccess: Boolean = false,
-    val submitError: String? = null
+    val submitError: String? = null,
+    // GPS location
+    val currentLat: Double? = null,
+    val currentLng: Double? = null,
+    val hasGpsFix: Boolean = false,
+    val isGpsCentered: Boolean = false
 )
 
 class MapViewModel : ViewModel() {
@@ -50,6 +55,18 @@ class MapViewModel : ViewModel() {
 
     fun updateCamera(camera: CameraPosition) {
         _uiState.value = _uiState.value.copy(camera = camera)
+    }
+
+    fun setCurrentLocation(lat: Double, lng: Double) {
+        _uiState.value = _uiState.value.copy(
+            currentLat = lat,
+            currentLng = lng,
+            hasGpsFix = true
+        )
+    }
+
+    fun markGpsCentered() {
+        _uiState.value = _uiState.value.copy(isGpsCentered = true)
     }
 
     fun onMapTapped(lat: Double, lng: Double) {
@@ -114,7 +131,8 @@ class MapViewModel : ViewModel() {
             description = "",
             photoUri = null,
             submitSuccess = false,
-            submitError = null
+            submitError = null,
+            isGpsCentered = false
         )
     }
 
