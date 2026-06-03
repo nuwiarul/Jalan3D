@@ -6,9 +6,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 data class CameraPosition(
-    val latitude: Double = -6.2088,   // Jakarta default
-    val longitude: Double = 106.8456,
-    val zoom: Double = 12.0,
+    val latitude: Double = -8.4095,   // Bali default
+    val longitude: Double = 115.1889,
+    val zoom: Double = 10.0,
     val bearing: Double = 0.0,
     val tilt: Double = 0.0
 )

@@ -55,7 +55,7 @@ fun MapScreen(
             map.setStyle(Style.Builder().fromUri(STYLE_URL)) {
                 mapViewModel.onMapReady()
 
-                // Set default camera to Jakarta
+                // Set default camera to Bali
                 val position = uiState.camera
                 map.animateCamera(
                     CameraUpdateFactory.newLatLngZoom(
