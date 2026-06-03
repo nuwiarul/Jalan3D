@@ -12,7 +12,7 @@
 - [x] **2.3** — Multi-database config (auto-detect SQLite / PostgreSQL / MariaDB) ✅
 - [x] **2.4** — API Routes (health, reports CRUD, upload multipart) ✅
 - [x] **2.5** — Image upload (multipart, resize 1920px, JPEG quality 85) ✅
-- [ ] **2.6** — Reverse Geocoding (Nominatim)
+- [x] **2.6** — Reverse Geocoding (Nominatim + in-memory cache 24h) ✅
 
 **Catatan:** Build/run backend via tmux di server, bukan CI. Android connect via Tailscale.
 
