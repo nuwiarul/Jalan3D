@@ -1,5 +1,7 @@
 package com.jalan3d.ui
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -67,11 +69,23 @@ fun Jalan3DNavigation(modifier: Modifier = Modifier) {
         NavHost(
             navController = navController,
             startDestination = "map",
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.fillMaxSize()
         ) {
-            composable("map") { MapScreen() }
-            composable("list") { ListScreen() }
-            composable("profile") { ProfileScreen() }
+            composable("map") {
+                Box(Modifier.padding(innerPadding)) {
+                    MapScreen()
+                }
+            }
+            composable("list") {
+                Box(Modifier.padding(innerPadding)) {
+                    ListScreen()
+                }
+            }
+            composable("profile") {
+                Box(Modifier.padding(innerPadding)) {
+                    ProfileScreen()
+                }
+            }
         }
     }
 }
