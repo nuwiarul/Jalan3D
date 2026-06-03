@@ -7,8 +7,8 @@
 - [x] **1.4** — GitHub Actions CI (Android) ✅
 
 ## PR 2: Backend (Rust + Axum 0.8 + SQLx)
-- [ ] **2.1** — Project scaffold (Cargo.toml, rust-toolchain.toml)
-- [ ] **2.2** — Database layer (SQLx migration + schema)
+- [x] **2.1** — Project scaffold (Cargo.toml, rust-toolchain.toml) ✅
+- [x] **2.2** — Database layer (SQLx CRUD queries + request DTOs + offline mode) ✅
 - [ ] **2.3** — Multi-database config (SQLite / PostgreSQL / MariaDB)
 - [ ] **2.4** — API Routes (health, reports CRUD, upload)
 - [ ] **2.5** — Image upload (multipart, resize)
