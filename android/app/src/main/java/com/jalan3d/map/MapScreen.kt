@@ -58,12 +58,18 @@ fun MapScreen(
                 // Set default camera to Bali
                 val position = uiState.camera
                 map.animateCamera(
-                    CameraUpdateFactory.newLatLngZoom(
-                        org.maplibre.android.geometry.LatLng(
-                            position.latitude,
-                            position.longitude
-                        ),
-                        position.zoom
+                    CameraUpdateFactory.newCameraPosition(
+                        org.maplibre.android.camera.CameraPosition.Builder()
+                            .target(
+                                org.maplibre.android.geometry.LatLng(
+                                    position.latitude,
+                                    position.longitude
+                                )
+                            )
+                            .zoom(position.zoom)
+                            .bearing(position.bearing)
+                            .tilt(position.tilt)
+                            .build()
                     ),
                     2000
                 )
