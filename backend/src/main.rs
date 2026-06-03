@@ -8,7 +8,6 @@ use std::net::SocketAddr;
 use axum::{Router, routing::get};
 use tower_http::cors::CorsLayer;
 use tracing_subscriber::EnvFilter;
-use sqlx::any::AnyPoolOptions;
 
 #[tokio::main]
 async fn main() {
@@ -24,19 +23,21 @@ async fn main() {
     // Load config
     let config = config::Config::from_env();
 
-    // Build database pool
-    let pool = AnyPoolOptions::new()
-        .max_connections(5)
-        .connect(&config.database_url)
-        .await
-        .expect("Failed to create database pool");
-    tracing::info!("Database connected");
+    tracing::info!(
+        "Starting server with {}",
+        config.database_kind.display_name()
+    );
+
+    // Build database pool (auto-detects SQLite / PostgreSQL / MariaDB)
+    let pool = db::pool::create_pool(&config.database_url, &config.database_kind).await;
+    tracing::info!("Database pool connected");
 
     // Run migrations
     sqlx::migrate!("./migrations")
         .run(&pool)
         .await
         .expect("Failed to run migrations");
+    tracing::info!("Database migrations applied");
 
     // Build router
     let app = Router::new()
@@ -49,7 +50,7 @@ async fn main() {
         config.host.parse().expect("Invalid HOST"),
         config.port,
     );
-    tracing::info!("Server starting on {addr}");
+    tracing::info!("Server listening on {addr}");
 
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();
