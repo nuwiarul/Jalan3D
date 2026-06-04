@@ -9,6 +9,7 @@ mod state;
 use std::net::SocketAddr;
 use axum::{Router, routing::{get, post}};
 use tower_http::cors::CorsLayer;
+use tower_http::services::ServeDir;
 use tracing_subscriber::EnvFilter;
 
 use state::AppState;
@@ -65,6 +66,8 @@ async fn main() {
         .route("/api/upload", post(routes::upload::upload_photo))
         // Reverse Geocode
         .route("/api/geocode/reverse", get(routes::geocode::reverse))
+        // Serve uploaded files
+        .nest_service("/uploads", ServeDir::new(&config.upload_dir))
         .layer(CorsLayer::permissive())
         .with_state(state);
 

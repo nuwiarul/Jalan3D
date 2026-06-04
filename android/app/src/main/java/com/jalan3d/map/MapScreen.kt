@@ -55,6 +55,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.jalan3d.ui.ReportDetailSheet
 import com.jalan3d.ui.ReportFormSheet
 import org.maplibre.android.MapLibre
 import org.maplibre.android.maps.MapView
@@ -134,7 +135,7 @@ fun MapScreen(
         mapView.getMapAsync { map ->
             mapLibreMap = map
 
-            // Register tap listener: marker tap → fly to, else location picker
+            // Register tap listener: marker tap → fly to + detail, else location picker
             map.addOnMapClickListener { latLng ->
                 // Check if tap hit a report marker
                 val screenPoint = map.projection.toScreenLocation(latLng)
@@ -145,7 +146,15 @@ fun MapScreen(
                 val features = map.queryRenderedFeatures(hitBox, MapMarkers.REPORTS_LAYER_ID)
 
                 if (features.isNotEmpty()) {
-                    // Tap on a report marker → fly to it in 3D
+                    // Tap on a report marker → fly to it + show detail
+                    val feature = features.first()
+                    val reportId = feature.properties()?.get("id")?.asString
+                    val report = reportId?.let { id ->
+                        mapViewModel.uiState.value.reports.firstOrNull { it.id == id }
+                    }
+                    if (report != null) {
+                        mapViewModel.selectReport(report)
+                    }
                     Map3DController.flyToLocation(map, latLng.latitude, latLng.longitude)
                 } else {
                     // Tap on empty map → location picker
@@ -398,6 +407,15 @@ fun MapScreen(
                     }
                 },
                 onSubmit = { mapViewModel.submitReport(context) }
+            )
+        }
+
+        // ── Report detail sheet (tap marker) ──
+        if (uiState.selectedReport != null) {
+            ReportDetailSheet(
+                report = uiState.selectedReport!!,
+                onDismiss = { mapViewModel.dismissReport() },
+                modifier = Modifier.align(Alignment.BottomCenter)
             )
         }
     }
