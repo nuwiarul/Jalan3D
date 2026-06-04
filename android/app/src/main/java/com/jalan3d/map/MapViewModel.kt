@@ -45,7 +45,9 @@ data class MapUiState(
     val isLoadingReports: Boolean = false,
     val reportsError: String? = null,
     // 3D extrusion data
-    val extrusionGeoJson: String? = null
+    val extrusionGeoJson: String? = null,
+    // Selected report detail
+    val selectedReport: Report? = null
 )
 
 class MapViewModel : ViewModel() {
@@ -155,6 +157,16 @@ class MapViewModel : ViewModel() {
             submitSuccess = false,
             submitError = null
         )
+    }
+
+    // ─── Select report for detail view ───
+
+    fun selectReport(report: Report) {
+        _uiState.value = _uiState.value.copy(selectedReport = report)
+    }
+
+    fun dismissReport() {
+        _uiState.value = _uiState.value.copy(selectedReport = null)
     }
 
     // ─── Load reports from backend ───

@@ -29,7 +29,7 @@
 - [x] **4.3** — 3D camera interaction ✅
 
 ## PR 5: Filament 3D Model Close-up
-- [ ] **5.1** — Filament setup
+- [x] **5.0** — Report detail on marker tap (foto + info) ✅
 - [ ] **5.2** — glTF model loading
 - [ ] **5.3** — Camera sync
 - [ ] **5.4** — Info overlay
@@ -41,4 +41,4 @@
 
 ---
 
-**Progress:** 7 / 22 tasks
+**Progress:** 8 / 22 tasks
