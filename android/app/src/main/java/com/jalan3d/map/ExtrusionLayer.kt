@@ -1,9 +1,12 @@
 package com.jalan3d.map
 
+import android.graphics.Color
 import org.maplibre.android.maps.Style
 import org.maplibre.android.style.expressions.Expression
 import org.maplibre.android.style.layers.FillExtrusionLayer
 import org.maplibre.android.style.layers.PropertyFactory
+import org.maplibre.android.style.light.Light
+import org.maplibre.android.style.light.Position
 import org.maplibre.android.style.sources.GeoJsonSource
 
 /**
@@ -29,6 +32,9 @@ object ExtrusionLayer {
 
         val source = GeoJsonSource(SOURCE_ID)
         style.addSource(source)
+
+        // Add light for 3D extrusion rendering
+        configureLight(style)
 
         val layer = FillExtrusionLayer(LAYER_ID, SOURCE_ID).apply {
             setProperties(
@@ -58,5 +64,23 @@ object ExtrusionLayer {
     fun updateExtrusions(style: Style, geoJson: String) {
         val source = style.getSourceAs<GeoJsonSource>(SOURCE_ID) ?: return
         source.setGeoJson(geoJson)
+    }
+
+    /**
+     * Configure ambient + directional light so fill-extrusion is properly
+     * shaded and visible. Only sets if the style doesn't already have light.
+     */
+    private fun configureLight(style: Style) {
+        try {
+            val light = style.light
+            light?.let {
+                it.setColor(Color.parseColor("#FFFFFF"))
+                it.setIntensity(0.6f)
+                // Position: anchor=viewport, azimuthal=210°, polar=60°
+                it.setPosition(Position(1.15f, 210f, 60f))
+            }
+        } catch (_: Exception) {
+            // Light API may not be available in all SDK versions — skip
+        }
     }
 }

@@ -19,10 +19,10 @@ data class ExtrusionConfig(
  * Severity → extrusion config mapping.
  */
 fun Severity.toExtrusionConfig(): ExtrusionConfig = when (this) {
-    Severity.RINGAN -> ExtrusionConfig(0.5f, 5f, "#4CAF50")   // green, small
-    Severity.SEDANG -> ExtrusionConfig(1.5f, 8f, "#FF9800")   // orange, medium-small
-    Severity.BERAT  -> ExtrusionConfig(3f,   12f, "#F44336")   // red, medium-large
-    Severity.KRITIS -> ExtrusionConfig(5f,   16f, "#9C27B0")   // purple, large
+    Severity.RINGAN -> ExtrusionConfig(0.5f, 25f, "#4CAF50")   // green, 50m square
+    Severity.SEDANG -> ExtrusionConfig(1.5f, 40f, "#FF9800")   // orange, 80m square
+    Severity.BERAT  -> ExtrusionConfig(3f,   60f, "#F44336")   // red, 120m square
+    Severity.KRITIS -> ExtrusionConfig(5f,   80f, "#9C27B0")   // purple, 160m square
 }
 
 /**
