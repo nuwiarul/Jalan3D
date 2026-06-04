@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.RectF
 import android.location.Location
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -133,9 +134,23 @@ fun MapScreen(
         mapView.getMapAsync { map ->
             mapLibreMap = map
 
-            // Register tap listener for location picker
+            // Register tap listener: marker tap → fly to, else location picker
             map.addOnMapClickListener { latLng ->
-                mapViewModel.onMapTapped(latLng.latitude, latLng.longitude)
+                // Check if tap hit a report marker
+                val screenPoint = map.projection.toScreenLocation(latLng)
+                val hitBox = RectF(
+                    screenPoint.x - 15f, screenPoint.y - 15f,
+                    screenPoint.x + 15f, screenPoint.y + 15f
+                )
+                val features = map.queryRenderedFeatures(hitBox, MapMarkers.REPORTS_LAYER_ID)
+
+                if (features.isNotEmpty()) {
+                    // Tap on a report marker → fly to it in 3D
+                    Map3DController.flyToLocation(map, latLng.latitude, latLng.longitude)
+                } else {
+                    // Tap on empty map → location picker
+                    mapViewModel.onMapTapped(latLng.latitude, latLng.longitude)
+                }
                 true
             }
 
