@@ -25,7 +25,7 @@
 
 ## PR 4: 3D Fill-Extrusion Road Damage
 - [x] **4.1** — Extrusion data pipeline ✅
-- [ ] **4.2** — FillExtrusionLayer
+- [x] **4.2** — FillExtrusionLayer ✅
 - [ ] **4.3** — 3D camera interaction
 
 ## PR 5: Filament 3D Model Close-up
@@ -41,4 +41,4 @@
 
 ---
 
-**Progress:** 5 / 22 tasks
+**Progress:** 6 / 22 tasks

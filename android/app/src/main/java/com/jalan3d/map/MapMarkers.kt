@@ -21,7 +21,7 @@ object MapMarkers {
 
     // ─── Reports markers ───
     private const val REPORTS_SOURCE_ID = "reports-source"
-    private const val REPORTS_LAYER_ID = "reports-layer"
+    internal const val REPORTS_LAYER_ID = "reports-layer"
 
     /**
      * Call once after style is loaded to add all sources + layers.
