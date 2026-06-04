@@ -24,7 +24,7 @@
 - [x] **3.5** — Repository layer ✅
 
 ## PR 4: 3D Fill-Extrusion Road Damage
-- [ ] **4.1** — Extrusion data pipeline
+- [x] **4.1** — Extrusion data pipeline ✅
 - [ ] **4.2** — FillExtrusionLayer
 - [ ] **4.3** — 3D camera interaction
 
@@ -41,4 +41,4 @@
 
 ---
 
-**Progress:** 4 / 22 tasks
+**Progress:** 5 / 22 tasks

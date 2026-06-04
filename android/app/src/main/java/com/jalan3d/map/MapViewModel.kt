@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jalan3d.data.ExtrusionPipeline
 import com.jalan3d.data.Report
 import com.jalan3d.data.ReportRepository
 import com.jalan3d.data.Severity
@@ -42,7 +43,9 @@ data class MapUiState(
     // Reports from API
     val reports: List<Report> = emptyList(),
     val isLoadingReports: Boolean = false,
-    val reportsError: String? = null
+    val reportsError: String? = null,
+    // 3D extrusion data
+    val extrusionGeoJson: String? = null
 )
 
 class MapViewModel : ViewModel() {
@@ -164,8 +167,10 @@ class MapViewModel : ViewModel() {
             )
             val result = repository.getReports()
             result.onSuccess { reports ->
+                val extrusionGeoJson = ExtrusionPipeline.reportsToGeoJson(reports)
                 _uiState.value = _uiState.value.copy(
                     reports = reports,
+                    extrusionGeoJson = extrusionGeoJson,
                     isLoadingReports = false,
                     reportsError = null
                 )
