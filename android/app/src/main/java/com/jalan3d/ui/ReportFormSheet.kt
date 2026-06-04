@@ -16,10 +16,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportFormSheet(
+    isVisible: Boolean,
     address: String?,
     selectedSeverity: String,
     photoUri: Uri?,
@@ -33,9 +35,32 @@ fun ReportFormSheet(
     onSubmit: () -> Unit
 ) {
     var description by remember { mutableStateOf("") }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
+    var hasBeenVisible by remember { mutableStateOf(false) }
+
+    // Track first-time visibility to reset description
+    LaunchedEffect(isVisible) {
+        if (isVisible) {
+            hasBeenVisible = true
+            sheetState.show()
+        } else if (sheetState.isVisible) {
+            sheetState.hide()
+        }
+    }
+
+    // Only render the sheet if it's been visible at least once
+    // (prevents rendering before map tap)
+    if (!hasBeenVisible) return
 
     ModalBottomSheet(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {
+            scope.launch {
+                sheetState.hide()
+                onDismiss()
+            }
+        },
+        sheetState = sheetState,
         shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
     ) {
         Column(
@@ -55,7 +80,12 @@ fun ReportFormSheet(
                     text = "Lapor Jalan Rusak",
                     style = MaterialTheme.typography.titleLarge
                 )
-                IconButton(onClick = onDismiss) {
+                IconButton(onClick = {
+                    scope.launch {
+                        sheetState.hide()
+                        onDismiss()
+                    }
+                }) {
                     Icon(Icons.Default.Close, contentDescription = "Batal")
                 }
             }

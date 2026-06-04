@@ -381,34 +381,35 @@ fun MapScreen(
         }
 
         // ── Report form bottom sheet ──
-        if (uiState.showForm) {
-            ReportFormSheet(
-                address = uiState.tappedAddress,
-                selectedSeverity = uiState.selectedSeverity,
-                photoUri = uiState.photoUri,
-                isSubmitting = uiState.isSubmitting,
-                submitError = uiState.submitError,
-                submitSuccess = uiState.submitSuccess,
-                onDismiss = { mapViewModel.cancelReport() },
-                onSeveritySelected = { mapViewModel.selectSeverity(it) },
-                onDescriptionChange = { mapViewModel.updateDescription(it) },
-                onTakePhoto = {
-                    val hasCameraPermission = ContextCompat.checkSelfPermission(
-                        context, Manifest.permission.CAMERA
-                    ) == PackageManager.PERMISSION_GRANTED
+        // Always rendered (not inside `if`) so ModalBottomSheet can animate
+        // its scrim out properly. Visibility controlled by `isVisible` param.
+        ReportFormSheet(
+            isVisible = uiState.showForm,
+            address = uiState.tappedAddress,
+            selectedSeverity = uiState.selectedSeverity,
+            photoUri = uiState.photoUri,
+            isSubmitting = uiState.isSubmitting,
+            submitError = uiState.submitError,
+            submitSuccess = uiState.submitSuccess,
+            onDismiss = { mapViewModel.cancelReport() },
+            onSeveritySelected = { mapViewModel.selectSeverity(it) },
+            onDescriptionChange = { mapViewModel.updateDescription(it) },
+            onTakePhoto = {
+                val hasCameraPermission = ContextCompat.checkSelfPermission(
+                    context, Manifest.permission.CAMERA
+                ) == PackageManager.PERMISSION_GRANTED
 
-                    val uri = com.jalan3d.camera.PhotoCapture.createPhotoUri(context)
-                    pendingPhotoUri = uri
+                val uri = com.jalan3d.camera.PhotoCapture.createPhotoUri(context)
+                pendingPhotoUri = uri
 
-                    if (hasCameraPermission) {
-                        cameraLauncher.launch(uri)
-                    } else {
-                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-                    }
-                },
-                onSubmit = { mapViewModel.submitReport(context) }
-            )
-        }
+                if (hasCameraPermission) {
+                    cameraLauncher.launch(uri)
+                } else {
+                    cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                }
+            },
+            onSubmit = { mapViewModel.submitReport(context) }
+        )
 
         // ── Report detail sheet (tap marker) ──
         if (uiState.selectedReport != null) {
