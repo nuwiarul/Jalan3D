@@ -5,6 +5,8 @@ import android.net.Uri
 import com.jalan3d.data.api.ApiClient
 import com.jalan3d.data.api.CreateReportRequest
 import com.jalan3d.data.api.GeocodeResponse
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -179,8 +181,11 @@ class ReportRepository {
      * Decodes the image, scales down to [MAX_IMAGE_DIMENSION] on the
      * longest side, and compresses as JPEG at [JPEG_QUALITY] quality.
      * This keeps uploads small and fast.
+     *
+     * Heavy work (bitmap decode + compress) runs on [Dispatchers.IO]
+     * to avoid blocking the main thread.
      */
-    private fun uriToFile(context: Context, uri: Uri): File {
+    private suspend fun uriToFile(context: Context, uri: Uri): File = withContext(Dispatchers.IO) {
         val file = File(context.cacheDir, "upload_${System.currentTimeMillis()}.jpg")
 
         try {
@@ -232,7 +237,7 @@ class ReportRepository {
             }
         }
 
-        return file
+        file
     }
 
     /**
