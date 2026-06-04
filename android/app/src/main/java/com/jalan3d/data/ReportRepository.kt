@@ -167,14 +167,84 @@ class ReportRepository {
 
     // ─── Helpers ───
 
+    companion object {
+        /** Max dimension (width or height) for uploaded images. */
+        private const val MAX_IMAGE_DIMENSION = 1920
+        /** JPEG quality for compressed uploads. */
+        private const val JPEG_QUALITY = 85
+    }
+
+    /**
+     * Convert a photo URI to a resized JPEG file.
+     * Decodes the image, scales down to [MAX_IMAGE_DIMENSION] on the
+     * longest side, and compresses as JPEG at [JPEG_QUALITY] quality.
+     * This keeps uploads small and fast.
+     */
     private fun uriToFile(context: Context, uri: Uri): File {
-        val inputStream = context.contentResolver.openInputStream(uri)
         val file = File(context.cacheDir, "upload_${System.currentTimeMillis()}.jpg")
-        inputStream?.use { input ->
-            file.outputStream().use { output ->
-                input.copyTo(output)
+
+        try {
+            // Step 1: Decode bounds only to compute sample size
+            val options = android.graphics.BitmapFactory.Options().apply {
+                inJustDecodeBounds = true
+            }
+            context.contentResolver.openInputStream(uri)?.use { stream ->
+                android.graphics.BitmapFactory.decodeStream(stream, null, options)
+            }
+
+            // Step 2: Calculate sample size to fit within MAX_IMAGE_DIMENSION
+            val sampleSize = calculateSampleSize(
+                options.outWidth, options.outHeight, MAX_IMAGE_DIMENSION
+            )
+
+            // Step 3: Decode with sample size
+            val decodeOptions = android.graphics.BitmapFactory.Options().apply {
+                inSampleSize = sampleSize
+            }
+            val bitmap = context.contentResolver.openInputStream(uri)?.use { stream ->
+                android.graphics.BitmapFactory.decodeStream(stream, null, decodeOptions)
+            }
+
+            // Step 4: Compress and save
+            if (bitmap != null) {
+                file.outputStream().use { output ->
+                    bitmap.compress(
+                        android.graphics.Bitmap.CompressFormat.JPEG,
+                        JPEG_QUALITY,
+                        output
+                    )
+                }
+                bitmap.recycle()
+            } else {
+                // Fallback: copy raw bytes if decoding fails
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    file.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+            }
+        } catch (_: Exception) {
+            // Fallback: copy raw bytes
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                file.outputStream().use { output ->
+                    input.copyTo(output)
+                }
             }
         }
+
         return file
+    }
+
+    /**
+     * Calculate the largest sample size that keeps the image within [maxDimension].
+     * Sample size must be a power of 2.
+     */
+    private fun calculateSampleSize(width: Int, height: Int, maxDimension: Int): Int {
+        if (width <= 0 || height <= 0) return 1
+        var sampleSize = 1
+        while (width / sampleSize > maxDimension || height / sampleSize > maxDimension) {
+            sampleSize *= 2
+        }
+        return sampleSize
     }
 }
