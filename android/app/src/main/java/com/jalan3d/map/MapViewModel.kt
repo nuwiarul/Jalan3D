@@ -222,8 +222,8 @@ class MapViewModel : ViewModel() {
                     submitSuccess = true,
                     showForm = false
                 )
-                // Reload reports to show the new one on map
-                loadReports()
+                // TODO: reload reports di background — sementara di-skip
+                // biar bisa isolasi penyebab freeze
             }.onFailure { error ->
                 _uiState.value = _uiState.value.copy(
                     isSubmitting = false,
