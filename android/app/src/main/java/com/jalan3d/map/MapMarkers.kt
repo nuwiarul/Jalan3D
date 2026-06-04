@@ -1,7 +1,7 @@
 package com.jalan3d.map
 
 import android.graphics.Color
-import com.jalan3d.data.api.ReportResponse
+import com.jalan3d.data.Report
 import org.maplibre.android.maps.Style
 import org.maplibre.android.style.expressions.Expression
 import org.maplibre.android.style.layers.CircleLayer
@@ -109,10 +109,10 @@ object MapMarkers {
     }
 
     /**
-     * Update all report markers from a list of [ReportResponse].
+     * Update all report markers from a list of [Report].
      * Replaces the entire GeoJSON FeatureCollection.
      */
-    fun updateReports(style: Style, reports: List<ReportResponse>) {
+    fun updateReports(style: Style, reports: List<Report>) {
         val source = style.getSourceAs<GeoJsonSource>(REPORTS_SOURCE_ID) ?: return
 
         if (reports.isEmpty()) {
@@ -122,14 +122,14 @@ object MapMarkers {
 
         val features = reports.joinToString(",") { report ->
             // Escape any special chars in properties
-            val escapedSeverity = report.severity
+            val escapedSeverity = report.severity.key
                 .replace("\\", "\\\\")
                 .replace("\"", "\\\"")
             val escapedId = report.id
                 .replace("\\", "\\\\")
                 .replace("\"", "\\\"")
 
-            """{"type":"Feature","geometry":{"type":"Point","coordinates":[${report.lng},${report.lat}]},"properties":{"severity":"$escapedSeverity","id":"$escapedId"}}"""
+            """{"type":"Feature","geometry":{"type":"Point","coordinates":[${report.longitude},${report.latitude}]},"properties":{"severity":"$escapedSeverity","id":"$escapedId"}}"""
         }
 
         source.setGeoJson("""{"type":"FeatureCollection","features":[$features]}""")

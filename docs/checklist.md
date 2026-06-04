@@ -20,8 +20,8 @@
 - [x] **3.1** — Retrofit API client (ReportApi, ReportDto, ApiClient, ApiConfig) ✅
 - [x] **3.2** — Location picker (tap map → lat/lng + marker + reverse geocode) ✅
 - [x] **3.3** — Report form (bottom sheet + severity + camera + submit) ✅
-- [ ] **3.4** — Map markers from API
-- [ ] **3.5** — Repository layer
+- [x] **3.4** — Map markers from API ✅
+- [x] **3.5** — Repository layer ✅
 
 ## PR 4: 3D Fill-Extrusion Road Damage
 - [ ] **4.1** — Extrusion data pipeline
@@ -41,4 +41,4 @@
 
 ---
 
-**Progress:** 2 / 22 tasks
+**Progress:** 4 / 22 tasks

@@ -4,17 +4,13 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jalan3d.data.api.ApiClient
-import com.jalan3d.data.api.CreateReportRequest
-import com.jalan3d.data.api.ReportResponse
+import com.jalan3d.data.Report
+import com.jalan3d.data.ReportRepository
+import com.jalan3d.data.Severity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
-import okhttp3.RequestBody.Companion.asRequestBody
-import java.io.File
 
 data class CameraPosition(
     val latitude: Double = -8.4095,
@@ -44,7 +40,7 @@ data class MapUiState(
     val hasGpsFix: Boolean = false,
     val isGpsCentered: Boolean = false,
     // Reports from API
-    val reports: List<ReportResponse> = emptyList(),
+    val reports: List<Report> = emptyList(),
     val isLoadingReports: Boolean = false,
     val reportsError: String? = null
 )
@@ -53,6 +49,8 @@ class MapViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(MapUiState())
     val uiState: StateFlow<MapUiState> = _uiState.asStateFlow()
+
+    private val repository = ReportRepository()
 
     fun onMapReady() {
         _uiState.value = _uiState.value.copy(isMapReady = true)
@@ -86,21 +84,14 @@ class MapViewModel : ViewModel() {
         )
 
         viewModelScope.launch {
-            try {
-                val response = ApiClient.api.reverseGeocode(lat, lng)
-                if (response.isSuccessful) {
-                    _uiState.value = _uiState.value.copy(
-                        tappedAddress = response.body()?.address,
-                        isLoadingAddress = false,
-                        showForm = true
-                    )
-                } else {
-                    _uiState.value = _uiState.value.copy(
-                        isLoadingAddress = false,
-                        showForm = true
-                    )
-                }
-            } catch (e: Exception) {
+            val result = repository.reverseGeocode(lat, lng)
+            result.onSuccess { address ->
+                _uiState.value = _uiState.value.copy(
+                    tappedAddress = address.ifBlank { null },
+                    isLoadingAddress = false,
+                    showForm = true
+                )
+            }.onFailure {
                 _uiState.value = _uiState.value.copy(
                     isLoadingAddress = false,
                     showForm = true
@@ -171,25 +162,17 @@ class MapViewModel : ViewModel() {
                 isLoadingReports = true,
                 reportsError = null
             )
-            try {
-                val response = ApiClient.api.listReports()
-                if (response.isSuccessful) {
-                    _uiState.value = _uiState.value.copy(
-                        reports = response.body() ?: emptyList(),
-                        isLoadingReports = false,
-                        reportsError = null
-                    )
-                } else {
-                    val errorBody = response.errorBody()?.string() ?: "Unknown error"
-                    _uiState.value = _uiState.value.copy(
-                        isLoadingReports = false,
-                        reportsError = "Gagal muat laporan: $errorBody"
-                    )
-                }
-            } catch (e: Exception) {
+            val result = repository.getReports()
+            result.onSuccess { reports ->
+                _uiState.value = _uiState.value.copy(
+                    reports = reports,
+                    isLoadingReports = false,
+                    reportsError = null
+                )
+            }.onFailure { error ->
                 _uiState.value = _uiState.value.copy(
                     isLoadingReports = false,
-                    reportsError = "Error: ${e.message}"
+                    reportsError = error.message ?: "Gagal muat laporan"
                 )
             }
         }
@@ -200,74 +183,36 @@ class MapViewModel : ViewModel() {
     fun submitReport(context: Context) {
         val lat = _uiState.value.tappedLat ?: return
         val lng = _uiState.value.tappedLng ?: return
-        val severity = _uiState.value.selectedSeverity
+        val severity = Severity.fromKey(_uiState.value.selectedSeverity)
         val description = _uiState.value.description
         val photoUri = _uiState.value.photoUri
 
         _uiState.value = _uiState.value.copy(isSubmitting = true, submitError = null)
 
         viewModelScope.launch {
-            try {
-                var photoPath: String? = null
-
-                // Upload photo first if present
-                if (photoUri != null) {
-                    val file = uriToFile(context, photoUri)
-                    val requestBody = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
-                    val part = MultipartBody.Part.createFormData("photo", file.name, requestBody)
-
-                    val uploadResponse = ApiClient.api.uploadPhoto(part)
-                    if (uploadResponse.isSuccessful) {
-                        val body = uploadResponse.body()
-                        if (body != null && body.uploaded.isNotEmpty()) {
-                            photoPath = body.uploaded.first().path
-                        }
-                    }
-                }
-
-                // Create report
-                val request = CreateReportRequest(
-                    lat = lat,
-                    lng = lng,
-                    severity = severity,
-                    photoPath = photoPath,
-                    address = _uiState.value.tappedAddress,
-                    description = description.ifBlank { null }
-                )
-
-                val response = ApiClient.api.createReport(request)
-                if (response.isSuccessful) {
-                    _uiState.value = _uiState.value.copy(
-                        isSubmitting = false,
-                        submitSuccess = true,
-                        showForm = false
-                    )
-                    // Reload reports to show the new one on map
-                    loadReports()
-                } else {
-                    val errorBody = response.errorBody()?.string() ?: "Unknown error"
-                    _uiState.value = _uiState.value.copy(
-                        isSubmitting = false,
-                        submitError = "Gagal: $errorBody"
-                    )
-                }
-            } catch (e: Exception) {
+            val result = repository.createReport(
+                lat = lat,
+                lng = lng,
+                severity = severity,
+                address = _uiState.value.tappedAddress,
+                description = description,
+                photoUri = photoUri,
+                context = context
+            )
+            result.onSuccess {
                 _uiState.value = _uiState.value.copy(
                     isSubmitting = false,
-                    submitError = "Error: ${e.message}"
+                    submitSuccess = true,
+                    showForm = false
+                )
+                // Reload reports to show the new one on map
+                loadReports()
+            }.onFailure { error ->
+                _uiState.value = _uiState.value.copy(
+                    isSubmitting = false,
+                    submitError = error.message ?: "Gagal kirim laporan"
                 )
             }
         }
-    }
-
-    private fun uriToFile(context: Context, uri: Uri): File {
-        val inputStream = context.contentResolver.openInputStream(uri)
-        val file = File(context.cacheDir, "upload_${System.currentTimeMillis()}.jpg")
-        inputStream?.use { input ->
-            file.outputStream().use { output ->
-                input.copyTo(output)
-            }
-        }
-        return file
     }
 }
