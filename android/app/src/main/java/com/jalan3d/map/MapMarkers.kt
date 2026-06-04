@@ -79,11 +79,11 @@ object MapMarkers {
         // Severity → color mapping
         val severityColor = Expression.match(
             Expression.get("severity"),
-            Expression.literal(Color.GRAY),            // default
-            Expression.stop("ringan", Expression.literal(Color.parseColor("#4CAF50"))),  // green
-            Expression.stop("sedang", Expression.literal(Color.parseColor("#FF9800"))),  // orange
-            Expression.stop("berat", Expression.literal(Color.parseColor("#F44336"))),   // red
-            Expression.stop("kritis", Expression.literal(Color.parseColor("#9C27B0")))   // purple
+            Expression.literal("#888888"),           // default (gray)
+            Expression.stop("ringan", Expression.literal("#4CAF50")),  // green
+            Expression.stop("sedang", Expression.literal("#FF9800")),  // orange
+            Expression.stop("berat", Expression.literal("#F44336")),   // red
+            Expression.stop("kritis", Expression.literal("#9C27B0"))   // purple
         )
 
         // Severity → radius mapping
