@@ -141,6 +141,7 @@ fun MapScreen(
 
             map.setStyle(Style.Builder().fromUri(STYLE_URL)) { style ->
                 MapMarkers.initialize(style)
+                ExtrusionLayer.initialize(style)
                 mapViewModel.onMapReady()
 
                 val position = uiState.camera
@@ -217,6 +218,14 @@ fun MapScreen(
     LaunchedEffect(uiState.reports) {
         mapLibreMap?.style?.let { style ->
             MapMarkers.updateReports(style, uiState.reports)
+        }
+    }
+
+    // ─── Update 3D extrusions when extrusion data changes ───
+    LaunchedEffect(uiState.extrusionGeoJson) {
+        val geoJson = uiState.extrusionGeoJson ?: return@LaunchedEffect
+        mapLibreMap?.style?.let { style ->
+            ExtrusionLayer.updateExtrusions(style, geoJson)
         }
     }
 
