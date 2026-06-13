@@ -1,6 +1,8 @@
 package com.jalan3d.data.api
 
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okhttp3.Response
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -11,12 +13,26 @@ import java.util.concurrent.TimeUnit
  */
 object ApiClient {
 
-    private val loggingInterceptor = HttpLoggingInterceptor().apply {
+    private val bodyLoggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
     }
 
+    private val headersLoggingInterceptor = HttpLoggingInterceptor().apply {
+        level = HttpLoggingInterceptor.Level.HEADERS
+    }
+
+    private val safeLoggingInterceptor = Interceptor { chain ->
+        val request = chain.request()
+        val isMultipart = request.body?.contentType()?.type == "multipart"
+        if (isMultipart) {
+            headersLoggingInterceptor.intercept(chain)
+        } else {
+            bodyLoggingInterceptor.intercept(chain)
+        }
+    }
+
     private val okHttpClient = OkHttpClient.Builder()
-        .addInterceptor(loggingInterceptor)
+        .addInterceptor(safeLoggingInterceptor)
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
         .writeTimeout(60, TimeUnit.SECONDS)
@@ -30,3 +46,4 @@ object ApiClient {
 
     val api: ReportApi = retrofit.create(ReportApi::class.java)
 }
+
