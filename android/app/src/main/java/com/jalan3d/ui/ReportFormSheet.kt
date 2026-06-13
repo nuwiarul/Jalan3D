@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.compose.rememberAsyncImagePainter
+import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -140,8 +140,8 @@ fun ReportFormSheet(
                 }
 
                 if (photoUri != null) {
-                    Image(
-                        painter = rememberAsyncImagePainter(photoUri),
+                    AsyncImage(
+                        model = photoUri,
                         contentDescription = "Preview foto",
                         modifier = Modifier.size(64.dp),
                         contentScale = ContentScale.Crop

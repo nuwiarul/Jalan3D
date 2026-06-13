@@ -220,7 +220,11 @@ class MapViewModel : ViewModel() {
                 _uiState.value = _uiState.value.copy(
                     isSubmitting = false,
                     submitSuccess = true,
-                    showForm = false
+                    showForm = false,
+                    photoUri = null,
+                    tappedLat = null,
+                    tappedLng = null,
+                    tappedAddress = null
                 )
                 // Reload reports to show the new one on map
                 loadReports()
