@@ -219,12 +219,7 @@ class MapViewModel : ViewModel() {
             result.onSuccess {
                 _uiState.value = _uiState.value.copy(
                     isSubmitting = false,
-                    submitSuccess = true,
-                    showForm = false,
-                    photoUri = null,
-                    tappedLat = null,
-                    tappedLng = null,
-                    tappedAddress = null
+                    submitSuccess = true
                 )
                 // Reload reports to show the new one on map
                 loadReports()
